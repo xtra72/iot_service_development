@@ -1,0 +1,222 @@
+= Docker를 이용해 Node-RED 설치
+
+**Docker**를 사용하여 **Node-RED**를 설치하는 것은 매우 간단하고 빠른 방법입니다. Docker는 애플리케이션을 격리된 컨테이너에서 실행할 수 있도록 해주며, 복잡한 설치 과정 없이 한 번에 실행 환경을 준비할 수 있습니다. Docker를 사용하면 Node-RED를 손쉽게 관리하고, 필요할 때마다 컨테이너를 재시작하거나 삭제할 수 있습니다.
+
+다음은 Docker를 이용해 Node-RED를 설치하고 실행하는 과정을 설명합니다.
+
+---
+
+== 1. **Docker 설치**
+
+Node-RED를 Docker로 실행하려면 먼저 Docker가 설치되어 있어야 합니다. 만약 Docker가 설치되어 있지 않다면, 아래 명령어를 사용해 Docker를 설치합니다.
+
+== **1.1 Docker 설치 (Ubuntu 예시)**
+
+1. 패키지 목록을 업데이트하고 Docker의 필수 패키지를 설치합니다.
++
+[source,console]
+----
+sudo apt update
+sudo apt install apt-transport-https ca-certificates curl software-properties-common
+----
+2. Docker의 GPG 키를 추가합니다.
++
+[source,console]
+----
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+----
+3. Docker 저장소를 추가합니다.
++
+[source,console]
+----
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+----
+4. Docker를 설치합니다.
++
+[source,console]
+----
+sudo apt update
+sudo apt install docker-ce
+----
+5. Docker 서비스가 실행 중인지 확인합니다.
++
+[source,console]
+----
+sudo systemctl status docker
+----
+
+== **1.2 Docker 설치 (Raspberry Pi 예시)**
+
+Raspberry Pi에서 Docker를 설치하려면 다음 명령어를 사용합니다.
+
+1. Docker 설치 스크립트를 실행합니다.
++
+[source,console]
+----
+curl -fsSL https://get.docker.com -o get-docker.sh
+   sudo sh get-docker.sh
+----
+2. 현재 사용자를 Docker 그룹에 추가하여, **sudo** 없이 Docker 명령어를 사용할 수 있도록 설정합니다.
++
+[source,console]
+----
+sudo usermod -aG docker $USER
+----
+3. Raspberry Pi를 재부팅하여 설정을 적용합니다.
++
+[source,console]
+----
+sudo reboot
+----
+
+---
+
+== 2. **Docker로 Node-RED 설치 및 실행**
+
+== **2.1 Docker Hub에서 Node-RED 이미지 가져오기**
+
+Docker Hub에는 공식 Node-RED 이미지가 있습니다. Docker를 사용하여 Node-RED 이미지를 가져오고 실행하는 명령어는 다음과 같습니다.
+
+1. Docker Hub에서 Node-RED 이미지를 다운로드합니다.
++
+[source,console]
+----
+docker pull nodered/node-red
+----
+2. 이미지를 다운로드한 후, Node-RED를 컨테이너로 실행합니다.
++
+[source,console]
+----
+docker run -it -p 1880:1880 --name mynodered nodered/node-red
+----
+** 여기서 사용된 옵션들의 의미는 다음과 같습니다:
+*** **-it**: 컨테이너를 인터랙티브 모드로 실행.
+*** **-p 1880:1880**: 호스트의 포트 1880을 컨테이너의 포트 1880과 매핑하여 웹 인터페이스에 접근할 수 있게 합니다.
+*** **--name mynodered**: 컨테이너의 이름을 **mynodered**로 지정.
+*** **nodered/node-red**: Node-RED의 공식 Docker 이미지.
+
+Node-RED는 기본적으로 **포트 1880**에서 실행되므로, 웹 브라우저에서 **http://localhost:1880**으로 접속하여 Node-RED UI에 접근할 수 있습니다.
+
+== **2.2 백그라운드에서 Node-RED 실행**
+
+Node-RED를 백그라운드에서 실행하고 싶다면 **-d** 플래그를 추가합니다.
+
+[source,console]
+----
+docker run -d -p 1880:1880 --name mynodered nodered/node-red
+----
+
+**-d** 옵션은 컨테이너를 **백그라운드에서 실행**하므로, 터미널을 닫아도 Node-RED가 계속 동작합니다.
+
+== **2.3 컨테이너 시작 및 중지**
+
+이미 실행 중인 Node-RED 컨테이너를 중지하거나 다시 시작할 수 있습니다.
+
+* **컨테이너 중지**:
++
+[source,console]
+----
+docker stop mynodered
+----
+* **컨테이너 시작**:
+[source,console]
+----
+docker start mynodered
+----
+* **컨테이너 삭제**:
+컨테이너를 더 이상 사용하지 않으려면 삭제할 수 있습니다.
+[source,console]
+----
+docker rm mynodered
+----
+
+---
+
+== 3. **Node-RED 설정 및 데이터 저장**
+
+== **3.1 데이터 지속성 설정 (볼륨 마운트)**
+
+Node-RED는 기본적으로 데이터를 컨테이너 내부에 저장하지만, 컨테이너를 삭제하면 데이터도 함께 사라집니다. 따라서 **데이터 지속성**을 위해 로컬 파일 시스템을 컨테이너에 마운트할 수 있습니다.
+
+1. **볼륨 마운트**:
+* 다음 명령어는 로컬 디렉터리를 컨테이너의 데이터 디렉터리(**/data**)로 마운트하여 데이터를 지속적으로 저장합니다.
++
+[source,console]
+----
+   docker run -it -p 1880:1880 -v node_red_data:/data --name mynodered nodered/node-red
+----
+* **-v node_red_data:/data**: 로컬 디렉터리(**node_red_data**)를 컨테이너의 **/data** 디렉터리에 마운트하여, 플로우 데이터와 설정 파일을 저장합니다.
+
+이렇게 설정하면, Node-RED에서 생성한 플로우와 설정이 컨테이너를 삭제해도 유지됩니다.
+
+== **3.2 환경 변수 설정**
+
+Node-RED의 일부 설정은 환경 변수를 통해 제어할 수 있습니다. 예를 들어, 기본 암호화 및 포트를 변경하려면 컨테이너 실행 시 환경 변수를 설정할 수 있습니다.
+
+[source,console]
+----
+docker run -it -p 1880:1880 -v node_red_data:/data -e NODE_RED_USERNAME=admin -e NODE_RED_PASSWORD=password --name mynodered nodered/node-red
+----
+
+* **-e NODE_RED_USERNAME=admin**: Node-RED의 기본 사용자 이름을 **admin**으로 설정.
+* **-e NODE_RED_PASSWORD=password**: Node-RED의 기본 비밀번호를 **password**로 설정.
+
+이렇게 하면 Node-RED 대시보드에 접근할 때 로그인 요구사항이 추가됩니다.
+
+---
+
+== 4. **Node-RED 플러그인 및 노드 설치**
+
+Node-RED는 다양한 플러그인과 노드를 통해 기능을 확장할 수 있습니다. Docker로 실행한 Node-RED에서도 플러그인을 추가할 수 있습니다.
+
+== **4.1 Node-RED UI에서 노드 설치**
+
+Node-RED의 웹 UI에서 다음과 같이 플러그인을 추가할 수 있습니다:
+1. 웹 브라우저에서 Node-RED UI에 접속합니다 (**http://localhost:1880**).
+2. 오른쪽 상단 메뉴에서 **Manage palette**를 선택합니다.
+3. **Install** 탭으로 이동하여 원하는 노드를 검색한 후 **Install** 버튼을 클릭합니다.
+
+== **4.2 Docker 컨테이너 내에서 노드 설치**
+
+Docker 컨테이너 내부에서 직접 **npm**을 사용해 Node-RED 노드를 설치할 수도 있습니다.
+
+1. 먼저 Node-RED 컨테이너로 접속합니다.
++
+[source,console]
+----
+docker exec -it mynodered /bin/bash
+----
+2. Node-RED의 **userDir** 경로로 이동하여 필요한 노드를 설치합니다.
++
+[source,console]
+----
+cd /data
+npm install node-red-node-email
+----
+
+3. 설치가 완료되면 Node-RED를 재시작하여 노드가 반영됩니다.
+
+---
+
+== 5. **Node-RED 사용하기**
+
+Node-RED를 설치하고 실행한 후, 다양한 노드를 사용해 **데이터 흐름(Flow)**을 구축할 수 있습니다. Node-RED는 다양한 IoT 프로토콜과 통합되어 센서 데이터 수집, 가공, 전송 작업을 시각적으로 쉽게 구성할 수 있습니다.
+
+1. **데이터 흐름 만들기**: 예를 들어, **MQTT In** 노드를 사용해 MQTT 브로커에서 데이터를 구독하고, **Debug** 노드를 연결하여 수신된 데이터를 출력할 수 있습니다.
+2. **HTTP 요청 처리**: **HTTP In** 노드를 사용해 HTTP 요청을 받아 데이터를 처리한 후 **HTTP Response** 노드로 응답을 전송할 수 있습니다.
+3. **시각화 및 알림 설정**: Node-RED에서 수집된 데이터를 **Dashboard**를 통해 시각화하거나, 특정 이벤트가 발생하면 **Email** 노드로 알림을 보낼 수 있습니다.
+
+---
+
+== 결론
+
+Docker를 사용하여 Node-RED를 설치하면 복잡한 설정 없이 쉽게 컨테이너 환경에서 Node-RED를 실행하고 관리할 수 있습니다. Node-RED는 **IoT 시스템**에서 발생하는 데이터를 처리하고 자동화할 수 있는 강력한
+
+---
+
+[cols="1a,1a,1a",grid=none,frame=none]
+|===
+<s|
+^s|link:../../../README.md[목차]
+>s|
+|===

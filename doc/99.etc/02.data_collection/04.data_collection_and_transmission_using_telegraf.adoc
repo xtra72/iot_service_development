@@ -1,0 +1,167 @@
+= Telegraf를 활용한 데이터 수집 및 전송
+
+**Telegraf**는 InfluxData에서 개발한 오픈 소스 데이터 수집 에이전트로, 다양한 데이터 소스와 연동하여 데이터를 수집하고 이를 다른 시스템으로 전송할 수 있습니다. Telegraf는 수집한 데이터를 **타임 시리즈 데이터베이스**(예: InfluxDB)나 **메시지 브로커**(예: MQTT)로 전송하는 데 매우 유용하며, 다양한 IoT, 서버 모니터링, 클라우드 인프라 관리 등 많은 환경에서 사용됩니다.
+
+---
+
+== 1. Telegraf의 주요 구성 요소와 개념
+
+1. **플러그인 기반 아키텍처**: Telegraf는 Input, Output, Processor, Aggregator 네 가지 플러그인을 기반으로 하며, 각 플러그인은 데이터를 수집, 처리, 전송하는 역할을 담당합니다.
+** **Input 플러그인**: 다양한 소스에서 데이터를 수집합니다. 센서, 서버, API, 데이터베이스, 네트워크 장치 등에서 데이터를 가져올 수 있으며, MODBUS, MQTT, SNMP, HTTP, MySQL 등 다양한 프로토콜을 지원합니다.
+** **Processor 플러그인**: 수집한 데이터를 변환하거나 필터링합니다. 데이터 포맷을 수정하거나, 특정 조건에 맞게 필터링하여 데이터를 전송할 수 있습니다.
+** **Aggregator 플러그인**: 데이터의 평균, 최소/최대 값 등을 계산하여 집계된 데이터를 생성합니다.
+** **Output 플러그인**: 수집 및 가공된 데이터를 전송할 대상 시스템을 설정합니다. 예를 들어, InfluxDB, Prometheus, Graphite, MQTT 등으로 데이터를 전송할 수 있습니다.
+
+2. **구성 파일 (telegraf.conf)**: Telegraf의 모든 설정은 `telegraf.conf` 파일에 저장되며, 이 파일에 입력, 출력, 처리 플러그인 등의 설정을 지정하여 데이터 수집 및 전송 방법을 정의합니다.
+
+== 2. Telegraf를 활용한 데이터 수집 및 전송 구성 예시
+
+=== 2.1 예시: MODBUS/TCP 디바이스로부터 데이터 수집 후 MQTT 브로커로 전송하기
+
+**목표**: Telegraf를 통해 MODBUS/TCP 프로토콜을 사용하는 장치에서 데이터를 수집하고, 이를 MQTT 브로커로 전송하여 다른 시스템이나 애플리케이션이 수집된 데이터를 활용할 수 있도록 합니다.
+
+== 3. 단계별 설정
+
+=== 3.1 Telegraf 설치
+
+* **설치 방법**: Telegraf는 다양한 플랫폼에서 사용할 수 있으며, InfluxData의 공식 웹사이트나 패키지 관리자를 통해 설치할 수 있습니다.
+** 예시 (Ubuntu):
++
+[source,bash]
+----
+sudo apt update
+sudo apt install telegraf
+----
+
+=== 2. Telegraf 설정 파일 (telegraf.conf) 구성
+
+* **설정 파일 위치**: 기본적으로 `/etc/telegraf/telegraf.conf`에 위치하며, 이 파일을 수정하여 원하는 데이터 소스와 전송 방식을 설정할 수 있습니다.
+
+=== 3. Input 플러그인 설정: MODBUS/TCP 데이터를 수집
+
+Telegraf의 `inputs.modbus` 플러그인을 사용하여 MODBUS/TCP 장치에서 데이터를 수집합니다.
+
+* **MODBUS Input 플러그인 예시**:
++
+[source,toml]
+----
+[[inputs.modbus]]
+  name = "modbus_sensor_data"
+  ## MODBUS 장치의 IP 주소 및 포트 설정
+  controller = "tcp://192.168.1.100:502" # IP 주소와 포트 번호를 기입
+  ## 데이터를 읽어올 주소 범위 설정 (온도, 습도 등)
+  holding_registers = [
+    { name = "temperature", address = [0], data_type = "FLOAT" },
+    { name = "humidity", address = [1], data_type = "FLOAT" }
+  ]
+----
+** **name**: Telegraf가 수집하는 데이터를 식별할 이름을 지정합니다.
+** **controller**: MODBUS 장치의 IP 주소와 포트를 설정하여, Telegraf가 MODBUS 장치와 연결되도록 합니다.
+** **holding_registers**: 수집할 데이터의 주소와 데이터 유형을 정의합니다. 예를 들어, 온도는 주소 0에서 FLOAT 형식으로 수집하고, 습도는 주소 1에서 수집합니다.
+
+=== 4. Output 플러그인 설정: MQTT 브로커로 데이터 전송
+
+MODBUS에서 수집한 데이터를 **MQTT**를 통해 브로커로 전송합니다. 이를 위해 Telegraf의 `outputs.mqtt` 플러그인을 설정합니다.
+
+* **MQTT Output 플러그인 예시**:
++
+[source,toml]
+----
+[[outputs.mqtt]]
+  ## MQTT 브로커 주소 및 포트 설정
+  servers = ["tcp://broker.hivemq.com:1883"] # MQTT 브로커 주소와 포트를 기입
+  ## MQTT 주제 설정 (Topic)
+  topic = "sensor/data"
+  ## MQTT 연결 옵션 설정
+  username = "your_username"
+  password = "your_password"
+  ## MQTT 메시지 QoS 설정 (0, 1, 2 중 선택)
+  qos = 1
+  ## 데이터 포맷 설정
+  data_format = "json"
+----
+** **servers**: MQTT 브로커 주소를 설정합니다. 예를 들어, `tcp://broker.hivemq.com:1883`는 공개 테스트 브로커를 의미합니다.
+** **topic**: MQTT 메시지를 전송할 주제를 설정합니다. 예를 들어, `sensor/data`라는 주제를 사용하여 데이터를 전송합니다.
+** **username 및 password**: MQTT 브로커에서 인증을 요구할 경우 사용자명과 비밀번호를 설정합니다.
+** **qos**: MQTT 메시지의 전송 품질을 설정할 수 있습니다. 0은 최소의 보장, 1은 전달 보장, 2는 정확히 한 번만 전달을 보장합니다.
+** **data_format**: JSON 형식으로 데이터를 전송합니다.
+
+=== 5. Telegraf 실행 및 테스트
+
+* **Telegraf 서비스 시작**: 설정이 완료되면 Telegraf를 시작하여 설정한 플러그인이 제대로 작동하는지 확인합니다.
++
+[source,bash]
+----
+sudo systemctl start telegraf
+----
+* **Telegraf 로그 확인**: Telegraf가 정상적으로 데이터를 수집하고 MQTT 브로커로 전송하는지 확인하려면 로그를 확인합니다.
++
+[source,bash]
+----
+sudo journalctl -u telegraf -f
+----
+
+== 6. 전체 설정 파일 (telegraf.conf) 예시
+
+[source,toml]
+----
+# Telegraf Global Agent Configuration
+[agent]
+  interval = "10s"
+  round_interval = true
+  metric_batch_size = 1000
+  metric_buffer_limit = 10000
+  collection_jitter = "0s"
+  flush_interval = "10s"
+  flush_jitter = "0s"
+  precision = ""
+
+# MODBUS Input Plugin
+[[inputs.modbus]]
+  name = "modbus_sensor_data"
+  controller = "tcp://192.168.1.100:502"
+  holding_registers = [
+    { name = "temperature", address = [0], data_type = "FLOAT" },
+    { name = "humidity", address = [1], data_type = "FLOAT" }
+  ]
+
+# MQTT Output Plugin
+[[outputs.mqtt]]
+  servers = ["tcp://broker.hivemq.com:1883"]
+  topic = "sensor/data"
+  username = "your_username"
+  password = "your_password"
+  qos = 1
+  data_format = "json"
+----
+
+== 7. 데이터 수집 및 전송 흐름
+
+1. **MODBUS 데이터 수집**: Telegraf는 `inputs.modbus` 플러그인을 통해 MODBUS/TCP 디바이스로부터 온도와 습도 데이터를 주기적으로 수집합니다.
+
+2. **데이터 가공 및 포맷팅**: 수집된 데이터는 Telegraf 내부에서 JSON 형식으로 포맷팅됩니다.
+
+3. **MQTT로 데이터 전송**: Telegraf는 `outputs.mqtt` 플러그인을 통해 포맷팅된 데이터를 `sensor/data`라는 주제로 MQTT 브로커에 전송합니다.
+
+4. **실시간 데이터 스트림**: MQTT 브로커는 데이터를 구독하는 클라이언트(예: 데이터베이스, 대시보드 애플리케이션, 모니터링 시스템 등)에 실시간으로 전달합니다.
+
+== 8. 주요 장점
+
+* **확장성**: Telegraf는 다양한 Input/Output 플러그인을 제공하므로, 필요에 따라 새로운 데이터 소스나 출력 대상을 쉽게 추가할 수 있습니다.
+
+* **유연성**: 다양한 플러그인을 사용하여 데이터 수집과 전송을 간단하게 구성할 수 있으며, JSON, Line Protocol 등 다양한 포맷을 지원합니다.
+
+* **경량성**: Telegraf는 경량의 에이전트로, CPU와 메모리 자원을 최소화하며 효율적으로 데이터 수집과 전송을 수행할 수 있습니다.
+
+== 9. 정리
+
+* Telegraf는 MODBUS 장치에서 데이터를 수집하고, 이를 MQTT를 통해 전송하여 다양한 IoT 애플리케이션에서 데이터를 활용할 수 있는 데이터 수집 시스템을 간단히 구성할 수 있습니다.
+
+---
+
+[cols="1a,1a,1a",grid=none,frame=none]
+|===
+<s|
+^s|link:../../../README.md[목차]
+>s|
+|===

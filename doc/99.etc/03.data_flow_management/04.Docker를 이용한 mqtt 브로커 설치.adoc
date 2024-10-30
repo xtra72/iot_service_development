@@ -1,0 +1,242 @@
+= Docker를 이용한 MQTT 브로커 설치
+
+라즈베리 파이에서 **Docker Compose**를 이용해 **Mosquitto MQTT 브로커**를 설치하고 테스트하는 방법은 다음 단계로 구성됩니다. 이 과정을 통해 Mosquitto를 설치하고 간단한 테스트를 수행하여 MQTT 브로커가 정상적으로 작동하는지 확인할 수 있습니다.
+
+---
+
+== **1단계: Docker와 Docker Compose 설치**
+
+라즈베리 파이에서 Docker와 Docker Compose를 먼저 설치해야 합니다.
+
+1. **Docker 설치**:
++
+[source,bash]
+----
+curl -sSL https://get.docker.com | sh
+----
++
+설치 후, Docker가 정상적으로 설치되었는지 확인합니다.
++
+[source,bash]
+----
+sudo docker --version
+----
+
+2. **Docker Compose 설치**:
++
+[source,bash]
+----
+sudo apt-get update
+sudo apt-get install -y python3-pip
+sudo pip3 install docker-compose
+----
++
+설치가 완료되면 Docker Compose 버전을 확인하여 설치 상태를 점검합니다.
++
+[source,bash]
+----
+docker-compose --version
+----
+
+3. **Docker 권한 설정**:
++
+Docker 명령어 사용 시 매번 `sudo`를 입력하지 않도록 현재 사용자에게 Docker 권한을 부여합니다.
++
+[source,bash]
+----
+sudo usermod -aG docker $USER
+----
++
+설정 적용을 위해 로그아웃 후 다시 로그인하거나, 다음 명령어로 세션을 재로드합니다.
++
+[source,bash]
+----
+newgrp docker
+----
+
+== **2단계: Docker Compose 파일 작성**
+
+Docker Compose로 Mosquitto 컨테이너를 실행하기 위해 설정 파일(`docker-compose.yml`)을 작성합니다.
+
+1. **디렉토리 생성 및 이동**:
++
+[source,bash]
+----
+mkdir mosquitto_docker && cd mosquitto_docker
+----
+
+2. **docker-compose.yml 파일 생성**:
++
+`nano` 또는 `vim`으로 `docker-compose.yml` 파일을 생성합니다.
++
+[source,bash]
+----
+nano docker-compose.yml
+----
+
+3. **Compose 파일 내용 작성**:
++
+다음 내용을 파일에 복사하고 저장합니다.
++
+[source,yaml]
+----
+version: '3'
+services:
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    ports:
+      - "1883:1883"    # MQTT 기본 포트
+      - "9001:9001"    # WebSocket 포트
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+----
+** `1883` 포트는 MQTT 통신을 위한 기본 포트입니다.
+** `9001` 포트는 WebSocket 통신을 위한 포트입니다.
+** **volumes** 섹션은 Mosquitto 설정 파일과 데이터를 호스트에서 관리하도록 구성합니다.
+
+== **3단계: Mosquitto 설정 파일 작성**
+
+Mosquitto가 작동하려면 기본 설정 파일이 필요합니다.
+
+1. **필요한 디렉토리 생성**:
++
+[source,bash]
+----
+mkdir -p mosquitto/config mosquitto/data mosquitto/log
+----
+
+2. **설정 파일 생성**:
++
+`mosquitto/config/mosquitto.conf` 파일을 생성합니다.
++
+[source,bash]
+----
+nano mosquitto/config/mosquitto.conf
+----
+
+3. **설정 파일 내용 작성**:
++
+기본 설정 파일을 다음과 같이 작성합니다.
++
+[source,text]
+----
+persistence true
+persistence_location /mosquitto/data/
+log_dest file /mosquitto/log/mosquitto.log
+
+listener 1883
+allow_anonymous true
+----
+** `persistence`는 Mosquitto가 재시작할 때 마지막 상태를 복원하는 옵션입니다.
+** `allow_anonymous true` 설정은 익명 사용자가 연결할 수 있도록 허용하는 옵션입니다. 필요에 따라 설정을 변경할 수 있습니다.
+
+== **4단계: Docker Compose로 Mosquitto 실행**
+
+설정이 완료되면 Docker Compose를 사용해 Mosquitto 컨테이너를 실행합니다.
+
+1. **Docker Compose 실행**:
++
+[source,bash]
+----
+docker-compose up -d
+----
+** `-d` 옵션은 백그라운드에서 컨테이너를 실행하게 합니다.
+
+2. **컨테이너 상태 확인**:
++
+컨테이너가 정상적으로 실행되었는지 확인합니다.
++
+[source,bash]
+----
+docker ps
+----
++
+`mosquitto` 컨테이너가 정상적으로 실행 중인지 확인할 수 있습니다.
+
+3. **로그 확인**:
++
+Mosquitto 로그를 확인하여 제대로 작동하는지 점검합니다.
++
+[source,bash]
+----
+docker logs mosquitto
+----
+
+== **5단계: Mosquitto 테스트**
+
+설치된 Mosquitto 브로커가 정상적으로 작동하는지 **테스트**합니다. 이 테스트에서는 `mosquitto_pub`과 `mosquitto_sub` 명령어를 사용하여 메시지를 발행하고 구독합니다.
+
+1. **테스트 명령어 설치**:
++
+[source,bash]
+----
+sudo apt-get install -y mosquitto-clients
+----
+
+2. **구독자(subscriber) 실행**:
++
+다음 명령어로 `test/topic` 토픽을 구독합니다.
++
+[source,bash]
+----
+mosquitto_sub -h localhost -t test/topic
+----
++
+구독자 창에서 대기 상태가 됩니다.
+
+3. **발행자(publisher) 실행**:
++
+다른 터미널 창에서 `test/topic` 토픽에 메시지를 발행합니다.
++
+[source,bash]
+----
+mosquitto_pub -h localhost -t test/topic -m "Hello, Raspberry Pi!"
+----
+
+4. **결과 확인**:
++
+구독자 창에 `Hello, Raspberry Pi!` 메시지가 출력되면, Mosquitto 브로커가 정상적으로 작동하고 있는 것입니다.
+
+== **6단계: Mosquitto WebSocket 테스트 (선택 사항)**
+
+Docker Compose 파일에서 설정한 **WebSocket 포트(9001)**가 작동하는지 확인할 수 있습니다.
+
+1. **WebSocket 클라이언트**:
++
+WebSocket 연결 테스트를 위해 MQTT WebSocket 클라이언트 (예: MQTT Explorer 또는 브라우저 플러그인)를 사용합니다.
+
+2. **설정 예시**:
+* 호스트: `ws://<라즈베리 파이 IP 주소>:9001`
+* 연결 후 `test/topic` 토픽에 메시지를 발행하고 구독합니다.
+
+== **정리 및 종료**
+
+테스트가 완료되면 필요에 따라 Mosquitto 컨테이너를 종료하거나 다시 실행할 수 있습니다.
+
+* **종료 명령**:
++
+[source,bash]
+----
+docker-compose down
+----
+
+* **다시 시작**:
++
+[source,bash]
+----
+docker-compose up -d
+----
+
+이 과정이 끝나면 라즈베리 파이에서 Docker Compose를 통해 설치한 Mosquitto MQTT 브로커가 제대로 작동하며, 다양한 IoT 디바이스와 통신을 설정하여 IoT 서비스를 위한 MQTT 브로커로 사용할 수 있습니다.
+
+---
+
+[cols="1a,1a,1a",grid=none,frame=none]
+|===
+<s|
+^s|link:../../../README.md[목차]
+>s|
+|===

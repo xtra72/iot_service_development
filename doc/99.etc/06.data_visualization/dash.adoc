@@ -1,0 +1,237 @@
+= Dash
+
+**Dash**는 **Python**을 기반으로 한 오픈 소스 **데이터 시각화 및 웹 애플리케이션** 프레임워크로, 대화형 대시보드와 데이터 분석 애플리케이션을 손쉽게 구축할 수 있게 해줍니다. **Plotly**에 의해 개발된 Dash는 데이터 과학자나 분석가들이 복잡한 데이터 분석과 시각화를 쉽게 웹 애플리케이션 형태로 배포할 수 있는 환경을 제공합니다.
+
+== 1. **Dash의 주요 특징**
+
+1. **대화형 웹 애플리케이션**: Dash는 단순히 정적인 시각화를 넘어서 사용자가 직접 그래프나 차트를 조작할 수 있는 대화형 애플리케이션을 제공합니다. 예를 들어, 슬라이더를 조작하여 데이터 범위를 조절하거나, 드롭다운 메뉴를 통해 데이터를 필터링하는 기능을 쉽게 추가할 수 있습니다.
+
+2. **Python 중심의 웹 애플리케이션 구축**: HTML, CSS, JavaScript 등의 웹 기술을 몰라도 Python 코드만으로 웹 애플리케이션을 구현할 수 있어, Python에 익숙한 데이터 분석가나 과학자들이 손쉽게 대시보드를 제작할 수 있습니다.
+
+3. **Plotly 그래프와의 연동**: Dash는 Plotly의 그래프 라이브러리와 통합되어 다양한 형태의 시각화 요소를 제공합니다. 라인 그래프, 바 차트, 히트맵, 3D 그래프 등 수십 가지의 시각화 옵션을 통해 복잡한 데이터를 쉽게 시각화할 수 있습니다.
+
+4. **반응형 레이아웃과 콜백 시스템**: Dash는 사용자 상호작용에 따라 실시간으로 데이터를 업데이트하고 시각화를 변경할 수 있는 **콜백 시스템**을 제공합니다. 예를 들어, 특정 필터를 설정하면 해당 필터에 맞춰 그래프가 업데이트되는 방식으로 상호작용할 수 있습니다.
+
+5. **웹 애플리케이션으로 배포 용이**: Dash 애플리케이션은 웹 서버에서 쉽게 실행할 수 있어, 팀이나 클라이언트와 실시간 대시보드를 공유할 수 있습니다. 이를 통해 실시간 데이터 모니터링 및 분석이 가능하며, 배포와 유지 보수도 용이합니다.
+
+
+== 2. **Dash의 구성 요소**
+
+Dash는 세 가지 주요 요소로 구성됩니다.
+
+1. **레이아웃(Layout)**: 애플리케이션의 UI를 정의하는 요소로, HTML 태그 기반으로 텍스트, 이미지, 그래프, 입력 상자 등 다양한 컴포넌트를 배치합니다.
+
+2. **콜백(Callbacks)**: 사용자의 상호작용에 따라 애플리케이션의 상태를 변경할 수 있도록 하는 기능입니다. 콜백을 사용하여 슬라이더, 드롭다운, 버튼 등을 통해 데이터를 실시간으로 업데이트할 수 있습니다.
+
+3. **시각화 그래프(Plotly Graphs)**: Plotly의 시각화 라이브러리를 사용하여 다양한 그래프와 차트를 생성할 수 있습니다. 이를 통해 데이터의 패턴과 의미를 쉽게 파악할 수 있습니다.
+
+---
+
+== 3. **Dash의 활용 예시**
+
+1. **IoT 데이터 모니터링 대시보드**: Dash를 이용해 IoT 장치의 실시간 데이터를 수집하고 시각화하여 상태를 모니터링할 수 있습니다. 예를 들어, 스마트 팜의 온도와 습도 데이터를 실시간으로 확인하고, 알림 설정을 통해 이상 상태가 발생할 때 즉각적으로 반응할 수 있습니다.
+
+2. **금융 데이터 분석**: 금융 시장 데이터를 수집해 Dash로 시각화하여 주가 변화, 거래량 패턴 등을 분석할 수 있습니다. 투자 분석가가 주식 데이터를 다양한 필터와 조건을 통해 시각화하고, 시간 흐름에 따른 변화를 파악할 수 있습니다.
+
+3. **의료 데이터 시각화**: 환자의 실시간 생체 데이터를 Dash로 시각화하여 의료진이 환자의 상태를 모니터링하고, 이상 상태를 감지할 수 있습니다.
+
+Dash는 **대화형 데이터 시각화**가 필요하거나, Python 기반의 **웹 애플리케이션**을 구축하려는 경우에 이상적이며, 특히 **실시간 데이터 모니터링**과 **분석 대시보드**를 필요로 하는 프로젝트에서 널리 활용됩니다.
+
+
+== 4. **Docker로 Dash 설치 및 실행하기**
+
+Docker를 사용해 Dash 애플리케이션을 설치하고 활용하는 방법을 단계별로 설명하겠습니다. 이 과정을 통해 Dash 애플리케이션을 컨테이너 환경에서 관리할 수 있어, 배포와 유지보수가 용이해집니다.
+
+=== **1단계: 프로젝트 디렉토리 생성 및 파일 준비**
+
+1. **Dash 애플리케이션 디렉토리 생성**:
+   ******bash
+   mkdir dash_app
+   cd dash_app
+   ******
+
+2. **Python 애플리케이션 파일 생성**:
++
+Dash 애플리케이션의 예제 파일을 **app.py**라는 이름으로 생성합니다.
++
+[source,bash]
+----
+nano app.py
+----
+
+3. **app.py 파일 내용 작성**:
++
+아래 코드를 **app.py**에 입력하여, 기본적인 대시보드를 생성합니다.
++
+[source,python]
+----
+   import dash
+   from dash import dcc, html
+   from dash.dependencies import Input, Output
+   import plotly.express as px
+   import pandas as pd
+
+   # 샘플 데이터 생성
+   df = pd.DataFrame({
+       "Fruit": ["Apples", "Oranges", "Bananas", "Apples", "Oranges", "Bananas"],
+       "Amount": [4, 1, 2, 2, 4, 5],
+       "City": ["SF", "SF", "SF", "Montreal", "Montreal", "Montreal"]
+   })
+
+   # Dash 애플리케이션 초기화
+   app = dash.Dash(__name__)
+
+   # 애플리케이션 레이아웃 정의
+   app.layout = html.Div(children=[
+       html.H1(children='Fruit Sales Dashboard'),
+
+       dcc.Dropdown(
+           id='city-dropdown',
+           options=[
+               {'label': 'San Francisco', 'value': 'SF'},
+               {'label': 'Montreal', 'value': 'Montreal'}
+           ],
+           value='SF'
+       ),
+
+       dcc.Graph(id='bar-chart')
+   ])
+
+   # 콜백 함수 정의 (도시 선택에 따라 차트를 업데이트)
+   @app.callback(
+       Output('bar-chart', 'figure'),
+       Input('city-dropdown', 'value')
+   )
+   def update_chart(selected_city):
+       filtered_df = df[df['City'] == selected_city]
+       fig = px.bar(filtered_df, x="Fruit", y="Amount", color="Fruit", barmode="group")
+       return fig
+
+   # 애플리케이션 실행
+   if __name__ == '__main__':
+       app.run_server(host='0.0.0.0', port=8050, debug=True)
+----
+
+=== **2단계: Dockerfile 작성**
+
+Dash 애플리케이션을 Docker로 실행하기 위해 **Dockerfile**을 작성합니다.
+
+1. **Dockerfile 생성**:
++
+[source,bash]
+----
+nano Dockerfile
+----
+
+2. **Dockerfile 내용 작성**:
++
+**app.py**가 Python 3 환경에서 실행되도록 Docker 이미지를 구성합니다.
++
+[source,Dockerfile]
+----
+   # 베이스 이미지 설정 (Python 3.9)
+   FROM python:3.9-slim
+
+   # 작업 디렉토리 설정
+   WORKDIR /app
+
+   # 필요한 라이브러리 설치
+   COPY requirements.txt .
+   RUN pip install -r requirements.txt
+
+   # 애플리케이션 파일 복사
+   COPY . /app
+
+   # 컨테이너 실행 시 실행될 명령어
+   CMD ["python", "app.py"]
+----
+
+3. **requirements.txt 생성**:
++
+Dash와 관련된 라이브러리를 설치할 수 있도록 **requirements.txt** 파일을 생성합니다.
++
+[source,bash]
+----
+nano requirements.txt
+----
+
+4. **requirements.txt 내용 작성**:
++
+[source,text]
+----
+dash
+pandas
+plotly
+----
+
+---
+
+=== **3단계: Docker 이미지 빌드 및 실행**
+
+이제 Docker 이미지를 빌드하고 실행합니다.
+
+1. **Docker 이미지 빌드**:
++
+[source,bash]
+----
+docker build -t dash_app:latest .
+----
+
+2. **컨테이너 실행**:
++
+[source,bash]
+----
+docker run -p 8050:8050 dash_app
+----
+**  **-p 8050:8050**: 호스트의 8050 포트를 컨테이너의 8050 포트와 연결하여, 브라우저에서 Dash 애플리케이션에 접근할 수 있습니다.
+
+3. **애플리케이션 접속**:
++
+브라우저에서 **http://<라즈베리 파이 IP 주소>:8050**으로 접속하여, Dash 대시보드를 확인합니다. 드롭다운 메뉴에서 도시를 선택하면 바 차트가 업데이트됩니다.
+
+---
+
+=== **4단계: Docker Compose를 통한 관리 (선택 사항)**
+
+여러 개의 Dash 애플리케이션을 실행하거나 다른 서비스와 연동할 경우, **Docker Compose**를 사용하여 관리할 수 있습니다.
+
+1. **docker-compose.yml 파일 생성**:
+   ******bash
+   nano docker-compose.yml
+   ******
+
+2. **docker-compose.yml 내용 작성**:
+   ******yaml
+   version: '3'
+   services:
+     dash_app:
+       build: .
+       ports:
+         - "8050:8050"
+   ******
+
+3. **Docker Compose로 컨테이너 실행**:
+   ******bash
+   docker-compose up -d
+   ******
+   - **-d** 옵션을 통해 백그라운드에서 실행되도록 설정합니다.
+
+4. **애플리케이션 확인**:
+   브라우저에서 **http://<라즈베리 파이 IP 주소>:8050**로 접속하여 애플리케이션이 정상적으로 실행되는지 확인합니다.
+
+---
+
+== 5. **정리**
+
+* **Dash**는 Python 기반의 오픈 소스 프레임워크로, 대화형 데이터 시각화와 웹 애플리케이션을 쉽게 구축할 수 있게 해줍니다.
+* 웹 개발 지식 없이도 Python 코드만으로 복잡한 데이터 분석 대시보드를 만들 수 있으며, Plotly 그래프와 연동되어 다양한 시각화 옵션을 제공합니다.
+* 실시간 데이터 모니터링, 사용자 상호작용(콜백), 맞춤형 대시보드 구성 등으로 IoT 모니터링, 금융 데이터 분석, 의료 데이터 시각화 등에 유용하게 활용됩니다.
+
+---
+
+[cols="1a,1a,1a",grid=none,frame=none]
+|===
+<s|
+^s|link:../../../README.md[목차]
+>s|
+|===

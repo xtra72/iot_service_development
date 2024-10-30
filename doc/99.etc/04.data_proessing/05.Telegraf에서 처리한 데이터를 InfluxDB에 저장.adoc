@@ -1,0 +1,203 @@
+= Telegraf에서 처리한 데이터를 InfluxDB에 저장
+
+**Telegraf**는 다양한 소스에서 데이터를 수집하고, 이를 처리하여 **InfluxDB**와 같은 시계열 데이터베이스에 저장할 수 있는 **데이터 수집 및 처리 에이전트**입니다. 이 과정에서 Telegraf는 **입력 플러그인(Input Plugin)**을 통해 데이터를 수집하고, **출력 플러그인(Output Plugin)**을 사용해 InfluxDB에 데이터를 저장합니다.
+
+다음은 **Telegraf에서 수집한 데이터를 InfluxDB에 저장**하는 방법을 단계별로 설명합니다.
+
+---
+
+== 1. Telegraf 설정 파일 구성
+
+Telegraf는 설정 파일을 통해 데이터를 어떻게 수집하고, 처리하고, 출력할지를 결정합니다. **InfluxDB**를 사용하여 데이터를 저장하려면, Telegraf 설정 파일에 InfluxDB **출력 플러그인(Output Plugin)**을 구성해야 합니다.
+
+== 1.1 Telegraf 설정 파일 경로
+
+Telegraf 설정 파일은 일반적으로 **/etc/telegraf/telegraf.conf** 경로에 위치합니다. 설정 파일을 열어 InfluxDB와 연결하기 위한 구성을 추가합니다.
+
+[source,bash]
+----
+sudo nano /etc/telegraf/telegraf.conf
+----
+
+== 1.2 InfluxDB 출력 플러그인 설정
+
+Telegraf에서 수집한 데이터를 InfluxDB에 저장하려면 **출력 플러그인**으로 InfluxDB를 지정해야 합니다. 다음은 InfluxDB 출력 플러그인 설정의 기본 예시입니다.
+
+[source,bash]
+----
+[[outputs.influxdb]]
+  urls = ["http://localhost:8086"]  # InfluxDB 서버의 주소 (로컬에서 실행 중인 경우 localhost)
+  database = "telegraf"  # 데이터를 저장할 InfluxDB 데이터베이스 이름
+  precision = "s"  # 데이터의 시간 정밀도 (초 단위)
+  username = "telegraf_user"  # InfluxDB에서 사용할 사용자 이름
+  password = "password"  # 사용자 비밀번호
+----
+
+위의 설정에서:
+* **urls**: InfluxDB 서버의 URL을 설정합니다. 로컬에서 InfluxDB가 실행 중이라면 **http://localhost:8086**로 설정합니다. InfluxDB가 원격 서버에 있을 경우, 해당 서버의 IP 주소나 도메인 이름을 입력합니다.
+* **database**: 데이터를 저장할 InfluxDB 데이터베이스 이름을 지정합니다. 만약 해당 데이터베이스가 존재하지 않으면, InfluxDB는 자동으로 해당 이름의 데이터베이스를 생성할 수 있습니다.
+* **precision**: 시간 데이터의 정밀도를 설정합니다. **s**는 초 단위, **ms**는 밀리초 단위, **ns**는 나노초 단위로 설정할 수 있습니다.
+* **username**, **password**: InfluxDB에 접근하기 위한 인증 정보를 설정합니다. InfluxDB에서 해당 사용자 계정이 미리 생성되어 있어야 합니다.
+
+== 1.3 InfluxDB 데이터베이스 설정
+
+InfluxDB에 데이터를 저장할 데이터베이스를 미리 생성해야 할 수도 있습니다. InfluxDB가 실행 중이라면, InfluxDB CLI를 사용해 새로운 데이터베이스를 생성할 수 있습니다.
+
+[source,bash]
+influx
+
+이 명령어를 통해 InfluxDB CLI로 진입한 후, 다음과 같은 명령어를 입력하여 데이터베이스를 생성합니다.
+
+[source,bash]
+CREATE DATABASE telegraf;
+
+이제 **telegraf**라는 이름의 데이터베이스가 생성되었고, Telegraf가 수집한 데이터를 이 데이터베이스에 저장할 수 있습니다.
+
+
+== 2. Telegraf 입력 플러그인 구성
+
+Telegraf가 데이터를 수집할 수 있도록 **입력 플러그인**도 설정해야 합니다. 입력 플러그인은 다양한 소스에서 데이터를 수집하는 역할을 하며, Telegraf는 이를 처리한 후 InfluxDB에 저장합니다.
+
+== 2.1 입력 플러그인 예시
+
+입력 플러그인은 다양한 형태의 데이터를 수집할 수 있습니다. **CPU 사용률**, **메모리 사용량**, **MQTT 메시지**, **HTTP API 요청** 등을 통해 데이터를 수집할 수 있습니다.
+
+다음은 몇 가지 입력 플러그인의 예시입니다.
+
+* **CPU 입력 플러그인**:
++
+[source,toml]
+----
+[[inputs.cpu]]
+  percpu = true
+  totalcpu = true
+  collect_cpu_time = false
+  report_active = false
+----
+
+* **메모리 입력 플러그인**:
++
+[source,toml]
+----
+[[inputs.mem]]
+----
+
+* **MQTT 입력 플러그인**:
++
+[source,toml]
+----
+[[inputs.mqtt_consumer]]
+  servers = ["tcp://localhost:1883"]
+  topics = ["sensor/temperature", "sensor/humidity"]
+  qos = 0
+  connection_timeout = "30s"
+  data_format = "json"
+  json_time_key = "timestamp"
+  json_time_format = "unix"
+----
+
+* **HTTP 입력 플러그인** (HTTP API를 통해 데이터 수집):
++
+[source,toml]
+----
+[[inputs.http]]
+  urls = ["http://example.com/metrics"]
+  method = "GET"
+  data_format = "json"
+----
+
+입력 플러그인은 Telegraf가 다양한 소스에서 데이터를 가져오는 역할을 하며, 각 플러그인의 설정에 따라 Telegraf는 데이터를 지속적으로 수집하게 됩니다.
+
+== 3. Telegraf 실행 및 데이터 수집
+
+== 3.1 Telegraf 서비스 시작
+
+Telegraf의 설정이 완료되었으면, Telegraf 서비스를 실행하여 데이터를 수집하고, InfluxDB에 저장하는 작업을 시작할 수 있습니다.
+
+******bash
+sudo systemctl start telegraf
+sudo systemctl enable telegraf  # 부팅 시 자동으로 Telegraf가 실행되도록 설정
+******
+
+== 3.2 Telegraf 로그 확인
+
+Telegraf가 제대로 동작하고 있는지 확인하기 위해, 로그를 확인할 수 있습니다. 이를 통해 데이터가 정상적으로 수집되고 InfluxDB에 저장되고 있는지 확인할 수 있습니다.
+
+[source,bash]
+----
+sudo journalctl -u telegraf
+----
+
+또는 Telegraf 자체 로그 파일을 확인할 수 있습니다.
+
+[source,bash]
+----
+cat /var/log/telegraf/telegraf.log
+----
+
+== 3.3 InfluxDB에서 데이터 확인
+
+Telegraf가 데이터를 정상적으로 InfluxDB에 저장하고 있는지 확인하려면, InfluxDB에 저장된 데이터를 조회할 수 있습니다. 다음 명령어를 사용하여 InfluxDB CLI에서 데이터를 조회합니다.
+
+[source,bash]
+----
+influx
+----
+
+CLI에 접속한 후, 다음과 같은 쿼리를 사용하여 **telegraf** 데이터베이스에 저장된 데이터를 확인할 수 있습니다.
+
+[source,bash]
+----
+USE telegraf;
+SELECT * FROM cpu LIMIT 10;
+----
+
+위 쿼리는 **cpu** 측정값에서 상위 10개의 데이터를 조회하는 예시입니다. 이처럼 각 입력 플러그인에서 수집한 데이터를 InfluxDB에서 조회할 수 있습니다.
+
+== 4. InfluxDB와 Grafana 통합을 통한 시각화
+
+InfluxDB에 저장된 데이터를 **시각화**하고 **모니터링**하는 데 주로 사용되는 도구는 **Grafana**입니다. Telegraf가 수집한 데이터를 InfluxDB에 저장한 후, Grafana를 사용해 실시간으로 데이터를 시각화하고 모니터링할 수 있습니다.
+
+== 4.1 Grafana 설치
+
+Grafana를 설치하려면 다음 명령을 사용할 수 있습니다. (Ubuntu 예시)
+
+[source,bash]
+----
+sudo apt update
+sudo apt install -y grafana
+sudo systemctl start grafana-server
+sudo systemctl enable grafana-server
+----
+
+== 4.2 InfluxDB와 Grafana 연결
+
+Grafana 웹 인터페이스에 접속하여 InfluxDB를 **데이터 소스**로 추가할 수 있습니다.
+
+1. 브라우저에서 **http://localhost:3000**으로 접속하여 Grafana에 로그인합니다. 기본 로그인 정보는 다음과 같습니다:
+* 사용자 이름: **admin**
+* 비밀번호: **admin**
+
+2. 로그인 후, **Data Sources** 메뉴로 이동하여 **InfluxDB**를 데이터 소스로 추가합니다.
+
+3. InfluxDB의 URL, 데이터베이스 이름(**telegraf**), 인증 정보 등을 입력하여 Grafana와 InfluxDB를 연결합니다.
+
+4. 데이터 소스가 성공적으로 추가되면, 대시보드를 생성하고 InfluxDB에 저장된 데이터를 실시간으로 시각화할 수 있습니다.
+
+---
+
+== **정리**
+
+* Telegraf를 통해 수집된 데이터를 **InfluxDB**에 저장하면, 시계열 데이터를 빠르고 효율적으로 저장하고 분석할 수 있습니다.
+* Telegraf는 **다양한 입력 플러그인**을 통해 데이터를 수집하며, **InfluxDB 출력 플러그인**을 통해 수집된 데이터를 InfluxDB에 저장합니다.
+* 이렇게 저장된 데이터는 InfluxDB CLI를 통해 조회하거나, **Grafana**와 같은 시각화 도구를 통해 실시간 모니터링이 가능합니다.
+* 이를 통해 IoT 시스템이나 서버 모니터링 시스템에서 **대량의 시계열 데이터**를 효과적으로 처리하고, **자동화된 경고 시스템**을 구축할 수 있습니다.
+
+---
+
+[cols="1a,1a,1a",grid=none,frame=none]
+|===
+<s|
+^s|link:../../../README.md[목차]
+>s|
+|===

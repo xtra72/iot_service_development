@@ -1,0 +1,430 @@
+= Raspberry Pi에 Docker 설치하기
+
+Raspberry Pi에 Docker를 설치하고 사용하는 방법에 대해 자세히 설명하겠습니다. Raspberry Pi는 소형 컴퓨터로 다양한 IoT 및 홈 자동화 프로젝트에서 사용되며, Docker를 사용해 여러 애플리케이션과 서비스를 컨테이너로 관리하면 유연하고 효율적으로 활용할 수 있습니다.
+
+---
+
+== 1. Raspberry Pi에 Docker 설치
+
+Raspberry Pi OS가 설치된 상태에서 Docker를 설치하는 방법입니다. Raspberry Pi OS는 32비트와 64비트 버전을 모두 지원하므로, 현재 사용 중인 Raspberry Pi OS에 맞는 Docker를 설치해야 합니다.
+
+=== Docker 설치 명령어
+Raspberry Pi에서 Docker를 설치하려면 아래 명령어를 사용합니다. Docker는 공식적으로 Raspberry Pi OS를 지원하며, **get.docker.com** 스크립트를 통해 간편하게 설치할 수 있습니다.
+
+[source,bash]
+----
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+----
+
+* **curl** 명령어로 Docker 설치 스크립트를 다운로드합니다.
+* **sh get-docker.sh**를 실행하여 Docker를 설치합니다.
+
+설치가 완료되면 Docker 서비스가 자동으로 시작됩니다.
+
+=== Docker 설치 확인
+설치가 완료되면 Docker 버전을 확인하여 설치가 정상적으로 이루어졌는지 확인합니다.
+
+[source,bash]
+----
+docker --version
+----
+
+== 2. Docker를 현재 사용자로 실행하기
+
+기본적으로 Docker는 루트 권한으로 실행됩니다. 그러나 비루트 사용자로 Docker를 실행하려면 현재 사용자를 Docker 그룹에 추가해야 합니다.
+
+[source,bash]
+----
+sudo usermod -aG docker $USER
+----
+
+위 명령을 실행한 후, Raspberry Pi를 다시 시작하거나 로그아웃 후 다시 로그인하여 변경 사항을 적용합니다. 이후에는 **sudo** 없이 Docker 명령어를 사용할 수 있습니다.
+
+== 3. Docker Commands
+
+Docker에서 자주 사용되는 **Docker 기본 명령어**에 대해 설명하겠습니다.
+
+=== 3.1 docker run
+
+**docker run** 명령어는 새로운 컨테이너를 생성하고, 해당 컨테이너를 실행합니다. 이 명령어는 가장 많이 사용되는 명령어 중 하나입니다.
+
+[source,shell]
+----
+docker run [옵션] 이미지이름
+----
+
+* 예시:
++
+[source,shell]
+----
+docker run hello-world
+----
+** hello-world라는 Docker 이미지를 기반으로 컨테이너를 실행합니다. 이미지를 로컬에 가지고 있지 않으면 Docker는 Docker Hub에서 이미지를 자동으로 다운로드합니다.
+
+* 주요 옵션:
+** -d: 백그라운드에서 컨테이너를 실행.
+** -p: 호스트의 포트와 컨테이너의 포트를 연결(포트 바인딩).
++
+[source,shell]
+----
+docker run -d -p 8080:80 nginx
+----
+*** 위 명령어는 nginx 컨테이너를 백그라운드에서 실행하고, 호스트의 8080 포트로 접속하면 컨테이너의 80 포트로 전달됩니다.
+** --name: 컨테이너에 이름 지정.
++
+[source,shell]
+----
+docker run --name my_container nginx
+----
+** -v: 호스트의 디렉토리나 파일을 컨테이너에 마운트.
++
+[source,shell]
+----
+docker run -v /host/data:/container/data nginx
+----
+*** 호스트의 /host/data 디렉토리를 컨테이너의 /container/data에 연결하여 파일 공유.
+
+=== 3.2 docker ps
+
+**docker ps** 명령어는 현재 실행 중인 Docker 컨테이너 목록을 표시합니다.
+
+[source,shell]
+----
+docker ps
+----
+
+* 주요 옵션:
+** -a: 종료된 컨테이너를 포함하여 모든 컨테이너 목록을 보여줍니다.
++
+[source,shell]
+----
+docker ps -a
+----
+
+=== 3.3 docker pull
+
+**docker pull** 명령어는 Docker 이미지를 **Docker Hub** 또는 다른 원격 레지스트리에서 다운로드합니다.
+
+[source,shell]
+----
+docker pull 이미지이름
+----
+
+* 예시:
++
+[source,shell]
+----
+docker pull ubuntu:20.04
+----
+** ubuntu:20.04 이미지를 Docker Hub에서 가져옵니다. 태그(:20.04)는 이미지의 특정 버전을 나타냅니다.
+
+=== 3.4 docker stop
+
+**docker stop** 명령어는 실행 중인 Docker 컨테이너를 중지합니다.
+
+[source,shell]
+----
+docker stop 컨테이너이름 또는 컨테이너ID
+----
+
+* 예시:
++
+[source,shell]
+----
+docker stop my_container
+----
+
+=== 3.5 docker start
+
+**docker start** 명령어는 중지된 Docker 컨테이너를 다시 시작합니다.
+
+[source,shell]
+----
+docker start 컨테이너이름 또는 컨테이너ID
+----
+
+* 예시:
++
+[source,shell]
+----
+docker start my_container
+----
+
+
+=== 3.6 docker exec
+
+**docker exec** 명령어는 실행 중인 Docker 컨테이너에서 명령어를 실행하는 데 사용됩니다. 주로 컨테이너 내의 셸에 접근하거나 프로세스를 실행할 때 사용됩니다.
+
+[source,shell]
+----
+docker exec [옵션] 컨테이너이름 명령어
+----
+
+* 예시:
++
+[source,shell]
+----
+docker exec -it my_container /bin/bash
+----
+** -it 옵션을 사용하여 my_container 내에서 상호작용할 수 있는 터미널 세션을 실행합니다.
+
+=== 3.7 docker logs
+
+**docker logs** 명령어는 컨테이너의 로그를 확인하는 데 사용됩니다.
+
+[source,shell]
+----
+docker logs [옵션] 컨테이너이름
+----
+
+* 예시:
++
+[source,shell]
+----
+docker logs my_container
+----
+** my_container 컨테이너의 로그를 출력합니다.
+
+=== 3.8 docker images
+
+**docker images** 명령어는 현재 로컬에 저장된 Docker 이미지 목록을 보여줍니다.
+
+[source,shell]
+----
+docker images
+----
+
+=== 3.9 docker rmi
+
+**docker rmi** 명령어는 Docker 이미지를 삭제할 때 사용됩니다.
+
+[source,shell]
+----
+docker rmi 이미지이름 또는 이미지ID
+----
+
+* 예시:
++
+[source,shell]
+----
+docker rmi ubuntu:20.04
+----
+** ubuntu:20.04 이미지를 삭제합니다.
+
+=== 3.10 docker rm
+
+**docker rm** 명령어는 컨테이너를 삭제합니다. 중지된 컨테이너만 삭제할 수 있습니다.
+
+[source,shell]
+----
+docker rm 컨테이너이름 또는 컨테이너ID
+----
+
+* 예시:
++
+[source,shell]
+----
+docker rm my_container
+----
+
+=== 3.11 docker build
+
+**docker build** 명령어는 Dockerfile을 사용하여 이미지를 빌드합니다. 이 명령어를 사용하여 새로운 이미지를 생성할 수 있습니다.
+
+[source,shell]
+----
+docker build [옵션] 경로
+----
+
+* 예시:
++
+[source,shell]
+----
+  docker build -t my_image:latest .
+----
+**  현재 디렉토리(.)에 있는 Dockerfile을 사용하여 my_image:latest라는 이름의 이미지를 빌드합니다.
+
+---
+
+
+== 4. Docker Compose 설치
+
+Docker Compose는 여러 개의 컨테이너를 한 번에 정의하고 관리할 수 있는 도구로, Docker Compose를 통해 Docker 애플리케이션 스택을 관리할 수 있습니다. Raspberry Pi에서 Docker Compose를 설치하려면 아래 명령어를 사용합니다.
+
+[source,bash]
+----
+sudo apt update
+sudo apt install -y python3-pip
+sudo pip3 install docker-compose
+----
+
+설치가 완료되면 Docker Compose 버전을 확인하여 설치 상태를 점검합니다.
+
+[source,bash]
+----
+docker-compose --version
+----
+
+== 5. Docker 사용 예제: Nginx 웹 서버 실행
+
+이제 Docker가 설치되었으므로, Docker를 사용하여 간단한 웹 서버를 실행해보겠습니다. **Nginx** 웹 서버 이미지를 사용하여 테스트할 수 있습니다.
+
+=== 5.1 Docker로 Nginx 컨테이너 실행
+
+아래 명령어를 사용해 Nginx 웹 서버를 Docker 컨테이너로 실행합니다.
+
+[source,bash]
+----
+docker run -d -p 80:80 --name nginx-server nginx
+----
+
+* **-d**: 백그라운드에서 실행하는 옵션입니다.
+* **-p 80:80**: 호스트의 포트 80을 컨테이너의 포트 80과 연결하여 웹 서버에 접속할 수 있도록 합니다.
+* **--name nginx-server**: 컨테이너 이름을 **nginx-server**로 지정합니다.
+* **nginx**: Nginx 이미지를 사용해 컨테이너를 생성하고 실행합니다.
+
+=== 5.2 Nginx 웹 서버 접속 테스트
+
+Raspberry Pi의 IP 주소를 브라우저에 입력하면 기본 Nginx 환영 페이지를 볼 수 있습니다. 예를 들어, Raspberry Pi의 IP 주소가 **192.168.1.10**이라면 브라우저에서 **http://192.168.1.10**에 접속하여 웹 서버가 정상적으로 실행 중인지 확인할 수 있습니다.
+
+=== 5.3 실행 중인 컨테이너 관리
+
+실행 중인 Docker 컨테이너를 확인하려면 아래 명령어를 사용합니다.
+
+[source,bash]
+----
+docker ps
+----
+
+Nginx 웹 서버 컨테이너를 중지하거나 삭제할 수도 있습니다.
+
+* **컨테이너 중지**:
++
+[source,bash]
+----
+docker stop nginx-server
+----
+
+* **컨테이너 삭제**:
++
+[source,bash]
+----
+docker rm nginx-server
+----
+
+== 6. Docker Compose를 활용한 예제: 웹 서버 및 데이터베이스 구성
+
+Docker Compose를 사용하여 **Nginx 웹 서버**와 **MySQL 데이터베이스**를 동시에 실행하는 예제를 살펴보겠습니다. 이 구성을 통해 웹 애플리케이션의 프론트엔드와 백엔드를 분리하여 관리할 수 있습니다.
+
+=== 6.1 **docker-compose.yml** 파일 작성
+
+프로젝트 폴더를 생성하고 **docker-compose.yml** 파일을 작성합니다.
+
+[source,yaml]
+----
+version: '3.8'
+
+services:
+  web:
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./html:/usr/share/nginx/html
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:
+----
+
+* **web 서비스**:
+** **image**: Nginx 이미지를 사용합니다.
+** **ports**: 호스트의 포트 80을 컨테이너의 포트 80에 매핑합니다.
+** **volumes**: **./html** 디렉토리를 컨테이너의 **/usr/share/nginx/html** 경로에 마운트하여 웹 파일을 제공합니다.
+** **depends_on**: Nginx가 **db** 서비스 이후에 실행되도록 설정합니다.
+
+* **db 서비스**:
+** **image**: MySQL 5.7 이미지를 사용합니다.
+** **environment**: MySQL의 루트 사용자 비밀번호를 설정합니다.
+** **volumes**: **db-data** 볼륨을 사용하여 MySQL 데이터를 영구 저장합니다.
+
+=== 6.2 Docker Compose 파일 실행
+
+Docker Compose 파일이 있는 디렉토리에서 아래 명령어를 실행하여 모든 서비스를 시작합니다.
+
+[source,bash]
+----
+docker-compose up -d
+----
+
+* **-d** 옵션을 통해 백그라운드에서 컨테이너를 실행합니다.
+
+=== 6.3 Docker Compose 서비스 상태 확인
+
+실행 중인 Docker Compose 서비스를 확인하려면 아래 명령어를 사용합니다.
+
+[source,bash]
+----
+docker-compose ps
+----
+
+Nginx와 MySQL 서비스가 정상적으로 실행되고 있는지 확인할 수 있습니다.
+
+=== 6.4 웹 서버 테스트
+
+**./html** 디렉토리에 **index.html** 파일을 생성하고, 해당 파일에 간단한 HTML 코드를 작성해 Nginx 서버가 해당 파일을 제공하는지 확인합니다.
+
+[source,html]
+----
+<!-- html/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Welcome to Nginx on Raspberry Pi</title>
+</head>
+<body>
+  <h1>Hello, Docker on Raspberry Pi!</h1>
+</body>
+</html>
+----
+
+Raspberry Pi의 IP 주소를 브라우저에 입력하면 작성한 HTML 파일이 표시되는 것을 확인할 수 있습니다.
+
+=== 6.5 서비스 중지 및 삭제
+
+Docker Compose로 실행한 모든 컨테이너를 중지하려면 아래 명령어를 사용합니다.
+
+[source,bash]
+----
+docker-compose down
+----
+
+**down** 명령은 모든 서비스를 중지하고 컨테이너, 네트워크, 볼륨을 삭제합니다.
+
+== 7. 정리
+
+1. **Docker 설치**: Raspberry Pi에서 **get.docker.com** 스크립트를 사용해 Docker를 설치합니다.
+2. **Docker Compose 설치**: **pip3**를 사용하여 Docker Compose를 설치합니다.
+3. **Nginx 컨테이너 실행**: Docker를 통해 Nginx 웹 서버 컨테이너를 실행해 봅니다.
+4. **Docker Compose 파일 작성**: Nginx와 MySQL을 포함한 **docker-compose.yml** 파일을 작성해 Docker Compose로 실행합니다.
+5. **Docker Compose로 애플리케이션 관리**: **docker-compose up -d**와 **docker-compose down** 명령을 통해 애플리케이션을 관리합니다.
+
+이렇게 Docker와 Docker Compose를 사용하면 Raspberry Pi에서도 여러 애플리케이션을 간편하게 관리하고 배포할 수 있어 효율적인 환경 구성이 가능합니다.
+
+---
+
+[cols="1a,1a,1a",grid=none,frame=none]
+|===
+<s|
+^s|link:../../../README.md[목차]
+>s|
+|===
